@@ -1,0 +1,22 @@
+# Simulation ground-truth logs (contain hostnames/users/timestamps of your lab)
+simulations/simulation-log-*.csv
+
+# Never commit secrets or exported credentials
+*.env
+.env*
+*secret*
+*password*
+*.kdbx
+wazuh-install-files.tar
+wazuh-passwords.txt
+
+# VM artefacts and ISOs
+*.iso
+*.vdi
+*.vmdk
+*.ova
+
+# OS / editor noise
+Thumbs.db
+.DS_Store
+.vscode/

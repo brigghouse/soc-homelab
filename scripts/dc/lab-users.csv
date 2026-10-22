@@ -1,0 +1,9 @@
+﻿GivenName,Surname,SamAccountName,Department,Title,Groups
+Alice,Morgan,amorgan,IT,IT Support Analyst,GG-IT;GG-Helpdesk
+Ben,Carter,bcarter,IT,Systems Administrator,GG-IT;GG-ServerAdmins
+Chloe,Davies,cdavies,Finance,Accountant,GG-Finance
+Daniel,Evans,devans,Finance,Finance Manager,GG-Finance;GG-Managers
+Emma,Foster,efoster,Sales,Sales Executive,GG-Sales
+Faisal,Khan,fkhan,Sales,Sales Manager,GG-Sales;GG-Managers
+Grace,Hughes,ghughes,Finance,Payroll Officer,GG-Finance
+Harry,Price,hprice,Sales,Account Manager,GG-Sales

@@ -1,0 +1,20 @@
+<!--
+  Extra log sources for the Wazuh agent on DC01 and WS01.
+  Install-WazuhAgent.ps1 inserts these blocks into
+  C:\Program Files (x86)\ossec-agent\ossec.conf (inside <ossec_config>).
+  The Security, System and Application channels are collected by the default agent config.
+-->
+<localfile>
+  <location>Microsoft-Windows-Sysmon/Operational</location>
+  <log_format>eventchannel</log_format>
+</localfile>
+
+<localfile>
+  <location>Microsoft-Windows-PowerShell/Operational</location>
+  <log_format>eventchannel</log_format>
+</localfile>
+
+<localfile>
+  <location>Microsoft-Windows-TaskScheduler/Operational</location>
+  <log_format>eventchannel</log_format>
+</localfile>

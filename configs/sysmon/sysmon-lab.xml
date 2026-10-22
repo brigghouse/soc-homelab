@@ -1,0 +1,113 @@
+<!--
+  sysmon-lab.xml - Sysmon configuration for the soc-homelab project.
+
+  Design goals (small lab, so visibility beats volume):
+    * Log EVERY process creation with full command line and hashes (event 1).
+    * Log network connections only from processes attackers commonly abuse (event 3).
+    * Log access to LSASS (event 10), persistence locations in the file system (11)
+      and registry (12/13/14), WMI persistence (19-21), remote threads (8) and DNS (22).
+  Inspired by public community configs (SwiftOnSecurity, Olaf Hartong's sysmon-modular),
+  rewritten and reduced for this lab.
+
+  Apply / update:   Sysmon64.exe -c sysmon-lab.xml
+  Check active:     Sysmon64.exe -c
+-->
+<Sysmon schemaversion="4.90">
+  <HashAlgorithms>SHA256,IMPHASH</HashAlgorithms>
+  <CheckRevocation/>
+
+  <EventFiltering>
+
+    <!-- Event 1: process creation - log everything except the monitoring tools themselves -->
+    <RuleGroup name="ProcessCreate" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <Image condition="begin with">C:\Program Files (x86)\ossec-agent\</Image>
+        <ParentImage condition="begin with">C:\Program Files (x86)\ossec-agent\</ParentImage>
+        <Image condition="end with">\Sysmon64.exe</Image>
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- Event 3: network connections from commonly abused binaries and remote-admin ports -->
+    <RuleGroup name="NetworkConnect" groupRelation="or">
+      <NetworkConnect onmatch="include">
+        <Image condition="end with">\powershell.exe</Image>
+        <Image condition="end with">\pwsh.exe</Image>
+        <Image condition="end with">\cmd.exe</Image>
+        <Image condition="end with">\rundll32.exe</Image>
+        <Image condition="end with">\regsvr32.exe</Image>
+        <Image condition="end with">\mshta.exe</Image>
+        <Image condition="end with">\certutil.exe</Image>
+        <Image condition="end with">\bitsadmin.exe</Image>
+        <Image condition="end with">\wscript.exe</Image>
+        <Image condition="end with">\cscript.exe</Image>
+        <Image condition="begin with">C:\Users\</Image>
+        <DestinationPort condition="is">22</DestinationPort>
+        <DestinationPort condition="is">3389</DestinationPort>
+        <DestinationPort condition="is">5985</DestinationPort>
+        <DestinationPort condition="is">5986</DestinationPort>
+      </NetworkConnect>
+    </RuleGroup>
+
+    <!-- Event 6: drivers - only unsigned / non-Microsoft ones -->
+    <RuleGroup name="DriverLoad" groupRelation="or">
+      <DriverLoad onmatch="exclude">
+        <Signature condition="begin with">Microsoft</Signature>
+      </DriverLoad>
+    </RuleGroup>
+
+    <!-- Event 8: CreateRemoteThread - rare in normal use, classic injection signal -->
+    <RuleGroup name="CreateRemoteThread" groupRelation="or">
+      <CreateRemoteThread onmatch="exclude">
+        <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+      </CreateRemoteThread>
+    </RuleGroup>
+
+    <!-- Event 10: anything opening a handle to LSASS (credential access) -->
+    <RuleGroup name="ProcessAccess" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <TargetImage condition="is">C:\Windows\System32\lsass.exe</TargetImage>
+      </ProcessAccess>
+    </RuleGroup>
+
+    <!-- Event 11: files dropped in persistence / staging locations -->
+    <RuleGroup name="FileCreate" groupRelation="or">
+      <FileCreate onmatch="include">
+        <TargetFilename condition="contains">\Start Menu\Programs\Startup\</TargetFilename>
+        <TargetFilename condition="begin with">C:\Windows\System32\Tasks\</TargetFilename>
+        <TargetFilename condition="end with">.ps1</TargetFilename>
+        <TargetFilename condition="end with">.bat</TargetFilename>
+        <TargetFilename condition="end with">.vbs</TargetFilename>
+        <TargetFilename condition="end with">.hta</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+
+    <!-- Events 12/13/14: registry autostart locations and services -->
+    <RuleGroup name="RegistryEvent" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">\CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">\CurrentVersion\Policies\Explorer\Run</TargetObject>
+        <TargetObject condition="contains">\Winlogon\Shell</TargetObject>
+        <TargetObject condition="contains">\Winlogon\Userinit</TargetObject>
+        <TargetObject condition="end with">\ImagePath</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+
+    <!-- Events 19/20/21: WMI event subscriptions (persistence) - log all, they are rare -->
+    <RuleGroup name="WmiEvent" groupRelation="or">
+      <WmiEvent onmatch="exclude"/>
+    </RuleGroup>
+
+    <!-- Event 22: DNS queries - log all except the monitoring agent -->
+    <RuleGroup name="DnsQuery" groupRelation="or">
+      <DnsQuery onmatch="exclude">
+        <Image condition="begin with">C:\Program Files (x86)\ossec-agent\</Image>
+      </DnsQuery>
+    </RuleGroup>
+
+    <!-- Event 25: process tampering (hollowing / herpaderping) -->
+    <RuleGroup name="ProcessTampering" groupRelation="or">
+      <ProcessTampering onmatch="exclude"/>
+    </RuleGroup>
+
+  </EventFiltering>
+</Sysmon>
